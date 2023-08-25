@@ -1,0 +1,5 @@
+psutil==5.9.5
+pyftpdlib==1.5.7
+os
+socket
+platform
