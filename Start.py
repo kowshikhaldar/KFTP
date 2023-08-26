@@ -5,7 +5,7 @@ import Mount
 import os
 import socket
 
-
+#copied from internet .this function helps to find ip address assgined by router
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -17,6 +17,8 @@ def get_local_ip():
     finally:
         s.close()
     return ip
+
+#This function will generate a User as dictionary format for FTP credential
 def generate_User():
     try:
         Mounted_Drives=Mount.get_mounted_drives()
@@ -27,6 +29,7 @@ def generate_User():
     except Exception as e:
         print(str(e))
 
+#this function will insure path exist or not and add user to  authorizer of FTP libary
 def setUser(UsersDict):
     for User in Users_Dict:
         if os.path.exists(User["Drive"]) :
@@ -44,8 +47,8 @@ authorizer = DummyAuthorizer()
 
 setUser(Users_Dict)
 
-#authorizer.add_anonymous("d:\\")
 
+#configure FTP handler with existing data
 handler = FTPHandler
 handler.authorizer = authorizer
 handler.passive_ports=range(60001, 60101)
