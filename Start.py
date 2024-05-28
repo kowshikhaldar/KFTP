@@ -4,8 +4,9 @@ from pyftpdlib.servers import FTPServer
 import Mount
 import os
 import socket
+import threading
 
-#copied from internet .this function helps to find ip address assgined by router
+# copied from the internet. This function helps to find the IP address assigned by the router.
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -18,44 +19,61 @@ def get_local_ip():
         s.close()
     return ip
 
-#This function will generate a User as dictionary format for FTP credential
+# This function will generate a User as dictionary format for FTP credentials.
 def generate_User():
     try:
-        Mounted_Drives=Mount.get_mounted_drives()
-        Users=[]
+        Mounted_Drives = Mount.get_mounted_drives()
+        Users = []
         for i in range(len(Mounted_Drives)):
-            Users.append({"usr":f"User{i}","Password":"12345","Drive":Mounted_Drives[i]})
+            Users.append({"usr": f"User{i}", "Password": "12345", "Drive": Mounted_Drives[i]})
         return Users
     except Exception as e:
         print(str(e))
 
-#this function will insure path exist or not and add user to  authorizer of FTP libary
+# This function will ensure the path exists or not and add the user to the authorizer of the FTP library.
 def setUser(UsersDict):
-    for User in Users_Dict:
-        if os.path.exists(User["Drive"]) :
-                authorizer.add_user(username=User["usr"], password=User["Password"], homedir=User["Drive"],perm='elradfmwM')
-                print(f'credential for Directory {User["Drive"]} \n \t Username: {User["usr"]} and Password: {User["Password"]}')
-                print("-------------------------------------------")
+    for User in UsersDict:
+        if os.path.exists(User["Drive"]):
+            authorizer.add_user(username=User["usr"], password=User["Password"], homedir=User["Drive"], perm='elradfmwM')
+            print(f'Credentials for Directory {User["Drive"]} \n\t Username: {User["usr"]} and Password: {User["Password"]}')
+            print("-------------------------------------------")
         else:
-                print(f'Directory {User["Drive"]} does not exist')
+            print(f'Directory {User["Drive"]} does not exist')
 
-Users_Dict=generate_User()
-local_ip=get_local_ip()
-port=3000
+Users_Dict = generate_User()
+local_ip = get_local_ip()
+port = 3000
 authorizer = DummyAuthorizer()
-
 
 setUser(Users_Dict)
 
-
-#configure FTP handler with existing data
+# Configure FTP handler with existing data.
 handler = FTPHandler
 handler.authorizer = authorizer
-handler.passive_ports=range(60001, 60101)
+handler.passive_ports = range(60001, 60101)
 server = FTPServer((local_ip, port), handler)
 
-print(f"Server : ftp://{local_ip}:{port}")
+print(f"Server: ftp://{local_ip}:{port}")
 
+# Function to stop the server
+def stop_server():
+    print("Shutting down the server...")
+    server.close_all()
 
+# Thread to handle stopping the server with 's' key press
+def monitor_keyboard():
+    while True:
+        key = input()
+        if key == 's':
+            stop_server()
+            break
+
+# Start the keyboard monitoring thread
+keyboard_thread = threading.Thread(target=monitor_keyboard)
+keyboard_thread.start()
+
+# Start the FTP server in the main thread
 server.serve_forever()
-   
+
+# Wait for the keyboard thread to complete
+keyboard_thread.join()
